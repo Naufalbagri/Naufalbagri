@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eksplorasi Hukum Kepailitan & PKPU</title>
+    
+    <!-- CSS Framework: Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- JS Library: Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Placeholder Comments Required by Constraint -->
+    <!-- Chosen Palette: Slate (Neutrals) with Navy Blue and subtle Amber/Teal accents for a professional, trustworthy legal aesthetic. -->
+    <!-- Application Structure Plan: A dashboard-style layout with a sticky sidebar for navigation. This structure was chosen because legal documents are dense; breaking them into thematic sections (Konsep, Pihak, Prosedur, Syariah, Isu) allows users to consume information non-linearly based on their specific task or interest. Interactive cards, toggleable comparison views, and dynamic charts prevent cognitive overload and make abstract legal concepts (like timelines and hierarchies) tangible. -->
+    <!-- Visualization & Content Choices: 
+         1. Asas Kepailitan -> Goal: Inform -> Method: Interactive flip/hover cards -> Justification: Makes abstract principles memorable. Library: Tailwind CSS.
+         2. Hierarki Kreditur -> Goal: Organize/Inform -> Method: Doughnut Chart -> Justification: Shows the proportional priority conceptually. Library: Chart.js.
+         3. Perbandingan Waktu -> Goal: Compare -> Method: Horizontal Bar Chart -> Justification: Clearly contrasts the strict 60-day Pailit limit vs the 270-day PKPU limit. Library: Chart.js.
+         4. Konvensional vs Syariah -> Goal: Compare -> Method: JS-powered Toggle Cards -> Justification: Allows user to switch contexts without losing their place, directly answering the comparative nature of the report. Library: Vanilla JS.
+         5. Z-Score Zones -> Goal: Inform/Classify -> Method: Gauge-style Doughnut Chart -> Justification: Visually represents the safe, ignorant, and insolvent thresholds. Library: Chart.js. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        /* Custom Styles & Chart Container Constraints */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #0f172a; /* slate-900 */
+        }
+
+        h1, h2, h3, .serif-font {
+            font-family: 'Merriweather', serif;
+        }
+
+        /* CRITICAL: Chart Container Styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) { 
+            .chart-container { height: 350px; } 
+        }
+
+        /* Interactive Card Hover Effects */
+        .hover-card {
+            transition: all 0.3s ease;
+        }
+        .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        
+        /* Nav active state */
+        .nav-active {
+            background-color: #e0f2fe; /* sky-100 */
+            color: #0369a1; /* sky-700 */
+            border-left: 4px solid #0284c7; /* sky-600 */
+        }
+    </style>
+</head>
+<body class="antialiased overflow-x-hidden">
+
+    <!-- Mobile Header -->
+    <div class="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center fixed w-full z-50 shadow-md">
+        <div class="text-lg font-bold serif-font">⚖️ Hukum Kepailitan</div>
+        <button id="mobile-menu-btn" class="focus:outline-none text-2xl">☰</button>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <nav id="sidebar" class="bg-white w-64 h-screen fixed top-0 left-0 border-r border-slate-200 shadow-sm flex flex-col transition-transform duration-300 z-40 transform -translate-x-full md:translate-x-0 pt-16 md:pt-0">
+        <div class="p-6 hidden md:block">
+            <h1 class="text-xl font-bold serif-font text-slate-800 leading-tight">Hukum Kepailitan <br><span class="text-sm text-sky-600 font-sans font-normal">& PKPU Indonesia</span></h1>
+        </div>
+        <div class="flex-1 overflow-y-auto py-4">
+            <ul class="space-y-1">
+                <li><a href="#beranda" class="nav-link block px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">🏠 Beranda & Asas</a></li>
+                <li><a href="#pihak" class="nav-link block px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">👥 Para Pihak & Syarat</a></li>
+                <li><a href="#prosedur" class="nav-link block px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">⏱️ Prosedur & PKPU</a></li>
+                <li><a href="#syariah" class="nav-link block px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">🕌 Kepailitan Syariah</a></li>
+                <li><a href="#isu" class="nav-link block px-6 py-3 text-slate-600 hover:bg-slate-50 transition-colors">📊 Isu Kontemporer</a></li>
+            </ul>
+        </div>
+        <div class="p-6 border-t border-slate-100 text-xs text-slate-400">
+            Berdasarkan UU No. 37/2004<br>Data Ringkasan Michael Ho
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="ml-0 md:ml-64 pt-16 md:pt-0 min-h-screen">
+        
+        <!-- SECTION 1: BERANDA & ASAS -->
+        <section id="beranda" class="p-8 md:p-12 border-b border-slate-200 min-h-screen flex flex-col justify-center bg-gradient-to-br from-white to-slate-50">
+            <div class="max-w-5xl mx-auto w-full">
+                <span class="inline-block py-1 px-3 rounded-full bg-sky-100 text-sky-700 text-sm font-semibold mb-4">Pengantar</span>
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 text-slate-900 serif-font leading-tight">Memahami Kepailitan <br>Secara Komprehensif</h2>
+                <p class="text-lg text-slate-600 mb-10 max-w-3xl leading-relaxed">
+                    Bagian ini menguraikan fondasi dari Hukum Kepailitan di Indonesia. Tujuan utamanya adalah mencegah eksekusi sepihak dan membagi harta debitur secara adil. Anda dapat mengeksplorasi 4 (empat) asas fundamental yang menjadi tiang penyangga proses kepailitan dan PKPU di bawah ini. Klik atau sentuh kartu untuk melihat detailnya.
+                </p>
+
+                <!-- Interactive Cards for Principles -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 hover-card cursor-pointer" onclick="toggleCardDetail('detail-paritas')">
+                        <div class="text-3xl mb-3">⚖️</div>
+                        <h3 class="text-xl font-semibold mb-2">Paritas Creditorium</h3>
+                        <p class="text-slate-500 text-sm">Prinsip kesetaraan hak atas harta debitur.</p>
+                        <div id="detail-paritas" class="hidden mt-4 pt-4 border-t border-slate-100 text-sm text-slate-700 bg-slate-50 p-3 rounded">
+                            Semua kreditur mempunyai hak yang sama atas semua harta kekayaan debitur. Jika debitur gagal bayar, seluruh hartanya otomatis menjadi target (jaminan bersama) bagi para kreditur tanpa terkecuali.
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 hover-card cursor-pointer" onclick="toggleCardDetail('detail-paripassu')">
+                        <div class="text-3xl mb-3">🍕</div>
+                        <h3 class="text-xl font-semibold mb-2">Pari Passu Pro Rata Parte</h3>
+                        <p class="text-slate-500 text-sm">Pembagian proporsional berdasarkan piutang.</p>
+                        <div id="detail-paripassu" class="hidden mt-4 pt-4 border-t border-slate-100 text-sm text-slate-700 bg-slate-50 p-3 rounded">
+                            Harta debitur dibagi secara proporsional sesuai dengan persentase besar piutang masing-masing kreditur, kecuali bagi kreditur yang secara hukum diutamakan (pemegang jaminan khusus/separatis).
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 hover-card cursor-pointer" onclick="toggleCardDetail('detail-concursus')">
+                        <div class="text-3xl mb-3">🤝</div>
+                        <h3 class="text-xl font-semibold mb-2">Concursus Creditorium</h3>
+                        <p class="text-slate-500 text-sm">Syarat mutlak pluralitas kreditur.</p>
+                        <div id="detail-concursus" class="hidden mt-4 pt-4 border-t border-slate-100 text-sm text-slate-700 bg-slate-50 p-3 rounded">
+                            Syarat mutlak kepailitan adalah harus ada lebih dari satu kreditur (minimal 2). Jika hanya ada 1 kreditur, perkara cukup diselesaikan melalui gugatan perdata wanprestasi biasa.
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 hover-card cursor-pointer" onclick="toggleCardDetail('detail-going')">
+                        <div class="text-3xl mb-3">🏢</div>
+                        <h3 class="text-xl font-semibold mb-2">Going Concern</h3>
+                        <p class="text-slate-500 text-sm">Kelangsungan usaha demi pembayaran utang.</p>
+                        <div id="detail-going" class="hidden mt-4 pt-4 border-t border-slate-100 text-sm text-slate-700 bg-slate-50 p-3 rounded">
+                            Apabila perusahaan debitur dinilai masih prospektif (solven di masa depan), operasional perusahaan dapat dilanjutkan (di bawah pengawasan) meskipun dalam status pailit agar dapat menghasilkan uang untuk melunasi utang.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: PIHAK & SYARAT -->
+        <section id="pihak" class="p-8 md:p-12 border-b border-slate-200 bg-white">
+            <div class="max-w-5xl mx-auto w-full">
+                <span class="inline-block py-1 px-3 rounded-full bg-indigo-100 text-indigo-700 text-sm font-semibold mb-4">Aktor & Hierarki</span>
+                <h2 class="text-3xl md:text-4xl font-bold mb-6 text-slate-900 serif-font">Para Pihak & Syarat Pailit</h2>
+                <p class="text-slate-600 mb-10 leading-relaxed">
+                    Bagian ini mengidentifikasi siapa saja aktor yang terlibat dalam proses kepailitan dan hierarki pembayaran mereka. Anda akan memahami klasifikasi kreditur dari yang paling diprioritaskan hingga yang terakhir dibayar, serta peran vital Kurator dan Hakim Pengawas. 
+                </p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+                    
+                    <!-- Syarat & Pengelola -->
+                    <div>
+                        <div class="mb-8">
+                            <h3 class="text-xl font-bold mb-4 border-b pb-2 flex items-center"><span class="mr-2">📋</span> Syarat Mutlak Kepailitan</h3>
+                            <ul class="space-y-3">
+                                <li class="flex items-start"><span class="text-emerald-500 mr-2 font-bold">✓</span> <span class="text-sm">Memiliki <strong>minimal 2 Kreditur</strong>.</span></li>
+                                <li class="flex items-start"><span class="text-emerald-500 mr-2 font-bold">✓</span> <span class="text-sm">Gagal membayar sedikitnya <strong>satu utang</strong> yang telah jatuh tempo dan dapat ditagih.</span></li>
+                                <li class="flex items-start"><span class="text-emerald-500 mr-2 font-bold">✓</span> <span class="text-sm">Fakta hutang dapat <strong>dibuktikan secara sederhana</strong>.</span></li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                            <h3 class="text-lg font-bold mb-3 flex items-center"><span class="mr-2">👨‍⚖️</span> Pengelola Harta Pailit</h3>
+                            <div class="mb-3">
+                                <strong class="text-slate-800 text-sm">Kurator:</strong>
+                                <p class="text-sm text-slate-600 mt-1">Pihak independen yang diangkat pengadilan untuk mengambil alih, mengurus, dan membereskan (menjual) seluruh aset debitur. Bertanggung jawab penuh secara pribadi jika merugikan boedel pailit.</p>
+                            </div>
+                            <div>
+                                <strong class="text-slate-800 text-sm">Hakim Pengawas:</strong>
+                                <p class="text-sm text-slate-600 mt-1">Hakim Pengadilan Niaga yang mengawasi kinerja Kurator agar tidak menyalahgunakan wewenangnya.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart: Klasifikasi Kreditur -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                        <h3 class="text-center font-bold text-slate-800 mb-2">Hierarki Hak Tagih Kreditur</h3>
+                        <p class="text-center text-xs text-slate-500 mb-6">Visualisasi konseptual urutan prioritas pembayaran.</p>
+                        
+                        <!-- MANDATORY CHART CONTAINER -->
+                        <div class="chart-container">
+                            <canvas id="krediturChart"></canvas>
+                        </div>
+                        
+                        <div class="mt-6 text-sm text-slate-600 space-y-2">
+                            <p><strong>1. Preferen:</strong> Hak istimewa UU (Pajak, upah buruh, biaya kurator).</p>
+                            <p><strong>2. Separatis:</strong> Pemegang jaminan kebendaan (Gadai, Hipotek). Dapat eksekusi sendiri.</p>
+                            <p><strong>3. Konkuren:</strong> Kreditur tanpa jaminan. Dibayar paling akhir secara proporsional.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: PROSEDUR & PKPU -->
+        <section id="prosedur" class="p-8 md:p-12 border-b border-slate-200 bg-slate-50">
+            <div class="max-w-5xl mx-auto w-full">
+                <span class="inline-block py-1 px-3 rounded-full bg-amber-100 text-amber-700 text-sm font-semibold mb-4">Jalur Restrukturisasi</span>
+                <h2 class="text-3xl md:text-4xl font-bold mb-6 text-slate-900 serif-font">Prosedur & Mekanisme PKPU</h2>
+                <p class="text-slate-600 mb-10 leading-relaxed">
+                    Daripada langsung menuju likuidasi, UU menyediakan jalur Penundaan Kewajiban Pembayaran Utang (PKPU) agar debitur dapat merestrukturisasi utangnya. Bagian ini membandingkan dinamika waktu antara proses Pailit yang cepat dan PKPU yang memberikan ruang negosiasi, namun berisiko kepailitan otomatis jika gagal.
+                </p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+                    
+                    <!-- Chart: Timeline -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 order-2 lg:order-1">
+                        <h3 class="text-center font-bold text-slate-800 mb-2">Perbandingan Batas Waktu Kritis (Hari)</h3>
+                        <p class="text-center text-xs text-slate-500 mb-6">Waktu maksimal yang diberikan UU untuk tiap proses.</p>
+                        
+                        <!-- MANDATORY CHART CONTAINER -->
+                        <div class="chart-container">
+                            <canvas id="timelineChart"></canvas>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-4 text-center">PKPU yang gagal mencapai perdamaian dalam 270 hari berujung pada Kepailitan otomatis.</p>
+                    </div>
+
+                    <!-- PKPU Logic -->
+                    <div class="order-1 lg:order-2">
+                        <h3 class="text-2xl font-bold mb-4 text-slate-800">Anatomi PKPU</h3>
+                        
+                        <div class="space-y-4">
+                            <div class="p-4 bg-white border-l-4 border-amber-500 shadow-sm rounded-r">
+                                <h4 class="font-bold text-sm">1. Pengelola Harta (Dual Management)</h4>
+                                <p class="text-sm text-slate-600 mt-1">Berbeda dengan Pailit (Kurator penuh), pada PKPU Debitur masih mengelola harta namun <strong>wajib bersama Pengurus</strong>.</p>
+                            </div>
+                            
+                            <div class="p-4 bg-white border-l-4 border-amber-500 shadow-sm rounded-r">
+                                <h4 class="font-bold text-sm">2. PKPU Sementara ke Tetap</h4>
+                                <p class="text-sm text-slate-600 mt-1">Pengadilan wajib segera mengabulkan PKPU Sementara (Maks 3/20 hari). Setelahnya, Kreditor voting untuk memberikan PKPU Tetap guna membahas proposal perdamaian.</p>
+                            </div>
+
+                            <div class="p-4 bg-white border-l-4 border-red-500 shadow-sm rounded-r">
+                                <h4 class="font-bold text-sm">3. Gagal Damai = Pailit</h4>
+                                <p class="text-sm text-slate-600 mt-1">Jika lewat 270 hari tanpa kesepakatan, atau proposal perdamaian ditolak oleh mayoritas Kreditor, Debitur <strong>demi hukum dinyatakan Pailit</strong> tanpa proses gugatan ulang.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: KEPAILITAN SYARIAH (TAFLIS) -->
+        <section id="syariah" class="p-8 md:p-12 border-b border-slate-200 bg-white">
+            <div class="max-w-5xl mx-auto w-full">
+                <span class="inline-block py-1 px-3 rounded-full bg-emerald-100 text-emerald-700 text-sm font-semibold mb-4">Perspektif Khusus</span>
+                <h2 class="text-3xl md:text-4xl font-bold mb-6 text-slate-900 serif-font">Kepailitan Syariah (Taflis)</h2>
+                <p class="text-slate-600 mb-8 leading-relaxed">
+                    Sengketa bisnis berbasis Syariah memiliki filosofi yang berbeda, mengedepankan asas keadilan (<em>al-a'dalah</em>) dan tolong-menolong (<em>ta'awun</em>). Bagian ini menyajikan perbandingan interaktif antara hukum Kepailitan Konvensional dan Taflis, yang secara yurisdiksi merupakan kewenangan mutlak <strong>Pengadilan Agama</strong>.
+                </p>
+
+                <!-- Interactive Comparison Toggle -->
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                    <div class="flex justify-center mb-8">
+                        <div class="inline-flex bg-slate-200 rounded-lg p-1">
+                            <button id="btn-konvensional" class="px-6 py-2 rounded-md text-sm font-semibold bg-white shadow text-slate-800 transition-all" onclick="switchView('konvensional')">Konvensional (UU 37/2004)</button>
+                            <button id="btn-syariah" class="px-6 py-2 rounded-md text-sm font-semibold text-slate-500 hover:text-slate-800 transition-all" onclick="switchView('syariah')">Syariah (Taflis)</button>
+                        </div>
+                    </div>
+
+                    <!-- Cards Container -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative min-h-[200px]">
+                        
+                        <!-- Card 1 -->
+                        <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm transition-opacity duration-300" id="card-syarat">
+                            <div class="text-xs uppercase font-bold text-slate-400 mb-1 tracking-wider">Syarat Utama</div>
+                            <div id="content-syarat" class="text-sm text-slate-700 font-medium">
+                                Cukup memiliki 2 kreditur & 1 utang jatuh tempo. Bisa dipailitkan meski aset lebih besar dari utang.
+                            </div>
+                        </div>
+
+                        <!-- Card 2 -->
+                        <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm transition-opacity duration-300" id="card-status">
+                            <div class="text-xs uppercase font-bold text-slate-400 mb-1 tracking-wider">Status & Hak Debitur</div>
+                            <div id="content-status" class="text-sm text-slate-700 font-medium">
+                                Kehilangan hak untuk mengelola seluruh asetnya tanpa terkecuali setelah putusan pailit.
+                            </div>
+                        </div>
+
+                        <!-- Card 3 -->
+                        <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm transition-opacity duration-300" id="card-solusi">
+                            <div class="text-xs uppercase font-bold text-slate-400 mb-1 tracking-wider">Metode Penyelesaian</div>
+                            <div id="content-solusi" class="text-sm text-slate-700 font-medium">
+                                Mengutamakan pemberesan/likuidasi aset secara lelang publik untuk memuaskan kreditur.
+                            </div>
+                        </div>
+
+                    </div>
+                    
+                    <div class="mt-6 text-center text-sm text-slate-500 italic" id="yurisdiksi-text">
+                        Yurisdiksi: Pengadilan Niaga
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: ISU KONTEMPORER -->
+        <section id="isu" class="p-8 md:p-12 min-h-screen bg-slate-900 text-white">
+            <div class="max-w-5xl mx-auto w-full">
+                <span class="inline-block py-1 px-3 rounded-full bg-slate-700 text-slate-200 text-sm font-semibold mb-4">Analisis Lanjutan</span>
+                <h2 class="text-3xl md:text-4xl font-bold mb-6 serif-font">Isu Kontemporer & Insolvency Test</h2>
+                <p class="text-slate-300 mb-10 leading-relaxed">
+                    Bagian terakhir ini mengeksplorasi isu-isu kritis dalam praktik kepailitan saat ini. Ketidakadaan kewajiban uji insolvensi dalam UU memicu kontroversi di mana perusahaan sehat bisa dipailitkan. Di sini, kita mensimulasikan penggunaan <strong>Altman Z-Score</strong> sebagai filter penyaring kepailitan, bersama bahasan mengenai yurisdiksi lintas batas.
+                </p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    
+                    <!-- Isu Text -->
+                    <div class="space-y-6">
+                        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                            <h3 class="text-lg font-bold mb-2 flex items-center text-sky-400">🌐 Cross Border Insolvency</h3>
+                            <p class="text-sm text-slate-300">Indonesia menganut prinsip <strong>Teritorialitas dengan pengecualian Universalitas</strong>. Putusan pengadilan asing tidak otomatis berlaku di Indonesia (harus digugat ulang). Namun, putusan pailit Indonesia diklaim menjangkau seluruh aset debitur di luar negeri.</p>
+                        </div>
+
+                        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                            <h3 class="text-lg font-bold mb-2 flex items-center text-sky-400">🛡️ Moratorium Kepailitan</h3>
+                            <p class="text-sm text-slate-300">Di era krisis (seperti pandemi), muncul wacana penghentian hak permohonan pailit sementara untuk mencegah PHK massal (seperti <em>Covid-19 Act</em> di Singapura). Namun, hal ini ditolak Kurator karena menabrak hak hukum kreditur dan iklim investasi.</p>
+                        </div>
+                    </div>
+
+                    <!-- Chart: Z-Score -->
+                    <div class="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700">
+                        <h3 class="text-center font-bold text-white mb-2">Simulasi Altman Z-Score (Non-Listed)</h3>
+                        <p class="text-center text-xs text-slate-400 mb-6">Uji matematis kelayakan kebangkrutan untuk mencegah pailit prematur.</p>
+                        
+                        <!-- MANDATORY CHART CONTAINER -->
+                        <div class="chart-container">
+                            <canvas id="zscoreChart"></canvas>
+                        </div>
+                        
+                        <div class="mt-4 flex justify-between text-xs font-mono text-slate-400 px-8">
+                            <span class="text-red-400">Z &lt; 1.23<br>Insolvent</span>
+                            <span class="text-yellow-400 text-center">1.23 - 2.90<br>Grey Zone</span>
+                            <span class="text-green-400 text-right">Z &gt; 2.90<br>Solvent</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div class="mt-20 text-center text-slate-500 text-sm pb-8">
+                Disusun sebagai representasi interaktif dokumen sumber.
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Vanilla JS Logic -->
+    <script>
+        // --- Navigation Logic ---
+        const sections = document.querySelectorAll("section");
+        const navLinks = document.querySelectorAll(".nav-link");
+        const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+        const sidebar = document.getElementById("sidebar");
+
+        // Mobile sidebar toggle
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+            if (mobileMenuBtn.innerText === '☰') {
+                mobileMenuBtn.innerText = '✕';
+            } else {
+                mobileMenuBtn.innerText = '☰';
+            }
+        });
+
+        // Close sidebar on link click (mobile)
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if(window.innerWidth < 768) {
+                    sidebar.classList.add('-translate-x-full');
+                    mobileMenuBtn.innerText = '☰';
+                }
+            });
+        });
+
+        // Highlight active nav based on scroll
+        window.addEventListener("scroll", () => {
+            let current = "";
+            sections.forEach((section) => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= sectionTop - 100) {
+                    current = section.getAttribute("id");
+                }
+            });
+
+            navLinks.forEach((link) => {
+                link.classList.remove("nav-active");
+                if (link.getAttribute("href").includes(current)) {
+                    link.classList.add("nav-active");
+                }
+            });
+        });
+
+        // --- Interaction Logic: Asas Cards ---
+        function toggleCardDetail(id) {
+            const el = document.getElementById(id);
+            if (el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+                el.classList.add('block', 'animate-fade-in');
+            } else {
+                el.classList.add('hidden');
+                el.classList.remove('block', 'animate-fade-in');
+            }
+        }
+
+        // --- Interaction Logic: Syariah vs Konvensional Toggle ---
+        const syariahData = {
+            konvensional: {
+                syarat: "Cukup memiliki 2 kreditur & 1 utang jatuh tempo. Bisa dipailitkan meski aset jauh lebih besar dari utang (karena tidak ada Insolvency Test).",
+                status: "Kehilangan hak sepenuhnya untuk mengelola seluruh asetnya (diambil alih Kurator) segera setelah putusan pailit diucapkan.",
+                solusi: "Fokus utama pada pemberesan/likuidasi aset secara lelang publik secepat mungkin untuk memuaskan tagihan para kreditur.",
+                yurisdiksi: "Yurisdiksi: Pengadilan Niaga (Peradilan Umum)"
+            },
+            syariah: {
+                syarat: "Insolvensi mutlak: Utang harus terbukti lebih besar dari asetnya. Permohonan merupakan ultimum remedium (jalan terakhir).",
+                status: "Dikategorikan sebagai Gharimin (berhak menerima Zakat). Aset primer/kebutuhan dasar tidak ikut disita/dijual.",
+                solusi: "Memberi tenggang waktu terlebih dahulu. Jika memiliki keahlian, Hakim dapat memerintahkannya menjual jasa untuk bayar utang.",
+                yurisdiksi: "Yurisdiksi: Pengadilan Agama (Secara Yuridis & Filosofis)"
+            }
+        }
+
+        function switchView(type) {
+            const btnKonv = document.getElementById('btn-konvensional');
+            const btnSyar = document.getElementById('btn-syariah');
+            const data = syariahData[type];
+
+            // Update buttons
+            if(type === 'konvensional') {
+                btnKonv.className = "px-6 py-2 rounded-md text-sm font-semibold bg-white shadow text-slate-800 transition-all";
+                btnSyar.className = "px-6 py-2 rounded-md text-sm font-semibold text-slate-500 hover:text-slate-800 transition-all";
+            } else {
+                btnSyar.className = "px-6 py-2 rounded-md text-sm font-semibold bg-white shadow text-slate-800 transition-all";
+                btnKonv.className = "px-6 py-2 rounded-md text-sm font-semibold text-slate-500 hover:text-slate-800 transition-all";
+            }
+
+            // Animate content change
+            const els = ['syarat', 'status', 'solusi'].map(id => document.getElementById(`content-${id}`));
+            
+            els.forEach(el => el.parentElement.classList.add('opacity-0'));
+            
+            setTimeout(() => {
+                document.getElementById('content-syarat').innerText = data.syarat;
+                document.getElementById('content-status').innerText = data.status;
+                document.getElementById('content-solusi').innerText = data.solusi;
+                document.getElementById('yurisdiksi-text').innerText = data.yurisdiksi;
+                
+                els.forEach(el => el.parentElement.classList.remove('opacity-0'));
+            }, 200);
+        }
+
+        // --- Chart.js Implementations ---
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // Common Chart Options ensuring responsiveness within container constraints
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: "'Inter', sans-serif" } } },
+                    tooltip: {
+                        bodyFont: { family: "'Inter', sans-serif" },
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) { label += ': '; }
+                                // Wrap long labels (approx 16 chars logic implemented conceptually in how text is fed, or handled by ChartJS native wrapping for tooltips)
+                                if (context.parsed.y !== null && context.chart.config.type !== 'doughnut') {
+                                    label += context.parsed.y + ' Hari';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            };
+
+            // 1. Hierarki Kreditur Chart (Doughnut)
+            const ctxKreditur = document.getElementById('krediturChart').getContext('2d');
+            new Chart(ctxKreditur, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Preferen (Pajak/Upah)', 'Separatis (Jaminan)', 'Konkuren (Tanpa Jaminan)'],
+                    datasets: [{
+                        data: [1, 1, 1], // Equal conceptual weight to show 3 parts
+                        backgroundColor: ['#0284c7', '#0ea5e9', '#bae6fd'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    cutout: '60%',
+                    plugins: {
+                        ...commonOptions.plugins,
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) { return context.label; } // Override to not show data "1"
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 2. Timeline PKPU vs Pailit Chart (Horizontal Bar)
+            const ctxTimeline = document.getElementById('timelineChart').getContext('2d');
+            new Chart(ctxTimeline, {
+                type: 'bar',
+                data: {
+                    labels: [
+                        ['PKPU Sementara', '(Kreditur)'], 
+                        ['PKPU Sementara', '(Debitur)'], 
+                        ['Batas Waktu', 'Putusan Pailit'], 
+                        ['Maksimal PKPU', 'Tetap (Final)']
+                    ], // Arrays for label wrapping
+                    datasets: [{
+                        label: 'Batas Waktu (Hari)',
+                        data: [20, 3, 60, 270],
+                        backgroundColor: ['#f59e0b', '#f59e0b', '#ef4444', '#10b981'],
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    indexAxis: 'y', // Make it horizontal
+                    scales: {
+                        x: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                        y: { grid: { display: false }, ticks: { font: { size: 11, family: "'Inter', sans-serif" } } }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // 3. Altman Z-Score Gauge Chart (Half Doughnut)
+            const ctxZScore = document.getElementById('zscoreChart').getContext('2d');
+            new Chart(ctxZScore, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Insolvent (Risiko Pailit)', 'Grey Zone (Ketidaktahuan)', 'Solvent (Sehat)'],
+                    datasets: [{
+                        data: [1.23, 1.67, 2.0], // Proportions representing the zones
+                        backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
+                        borderWidth: 0,
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    rotation: -90,
+                    circumference: 180,
+                    cutout: '75%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) { return context.label; }
+                            }
+                        }
+                    }
+                }
+            });
+            
+        });
+    </script>
+</body>
+</html>
